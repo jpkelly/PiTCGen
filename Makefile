@@ -1,9 +1,9 @@
 CC      = gcc
-CFLAGS  = -O2 -Wall -Wextra
+CFLAGS  = -O2 -Wall -Wextra -Isrc
 LDFLAGS = -lasound -lltc
 
 TARGET  = pitcgen
-SRCS    = pitcgen.c
+SRCS    = src/tc.c src/pitcgen.c
 HELPER  = pitcgenctl
 
 .PHONY: all clean install deps install-service enable-service
