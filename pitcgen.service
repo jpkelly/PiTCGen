@@ -1,0 +1,15 @@
+[Unit]
+Description=Pi Timecode Generator
+After=sound.target
+
+[Service]
+Type=simple
+EnvironmentFile=-/etc/default/pitcgen
+ExecStartPre=/usr/bin/amixer sset PCM 100% unmute
+ExecStart=/bin/sh -c '/usr/local/bin/pitcgen ${PITCGEN_OPTS:--r 25 -a 48000 -d plughw:CARD=Headphones,DEV=0}'
+Restart=always
+RestartSec=2
+User=root
+
+[Install]
+WantedBy=multi-user.target
