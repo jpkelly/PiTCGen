@@ -8,6 +8,8 @@ Broadcast-quality LTC SMPTE timecode generator appliance for Raspberry Pi.
 
 A professional Linear Timecode (LTC) generator that runs on a Raspberry Pi and boots as a self-contained appliance. The feature set targets the Ambient Lockit / Denecke SB-T class of hardware generators. Control via web browser and local CLI. Multi-source clock disciplining: GPS + PTPv2 + NTP, with seamless fallback. Local OLED/LCD display showing live timecode and clock-source status. Support from Pi 1 (700 MHz, 512 MB) through Pi 5.
 
+For hardware selection, wiring, and BOM see **[HARDWARE.md](HARDWARE.md)**.
+
 ---
 
 ## Architecture
@@ -72,6 +74,8 @@ PiTCGen reads `CLOCK_REALTIME` for its timecode source — it is **clock-source 
 |---|---|---|---|---|
 | 1 (best) | GPS + PPS | ±50 ns | u-blox NEO-M8T via GPIO PPS | Sky view lost, <4 satellites |
 | 2 | PTPv2 (ST 2059) | ±100 ns | Pi 4/5 native Ethernet HW timestamping | Network down, grandmaster lost |
+
+See [HARDWARE.md](HARDWARE.md) for GPS module selection, antenna recommendations, wiring, and kernel PPS configuration.
 | 3 | NTP pool | ±1–10 ms | Internet | Network down |
 | 4 (last) | Free-run | ±1–2 s/day drift file holdover | Pi RTC/oscillator | All external sources lost |
 
@@ -82,7 +86,7 @@ PiTCGen reads `CLOCK_REALTIME` for its timecode source — it is **clock-source 
 - **Daemon:** `ptp4l` (from linuxptp) with `--profile=smpte` for SMPTE ST 2059-2 broadcast profile
 - **Clock sync:** `phc2sys` copies the PTP Hardware Clock (PHC) → `CLOCK_REALTIME`
 - **Monitoring:** `ptpmon` daemon reads PTP stats via `pmc` and writes to shared memory (lock state, GM identity, mean path delay, offset from master)
-- **Hardware requirement:** Pi 4 or Pi 5 for hardware timestamping. Pi 1–3 route Ethernet through USB — software timestamping only (~10–100 µs jitter, unacceptable for broadcast PTP)
+- **Hardware requirement:** Pi 4 or Pi 5 for hardware timestamping. Pi 1–3 route Ethernet through USB — software timestamping only (~10–100 µs jitter, unacceptable for broadcast PTP). See [HARDWARE.md](HARDWARE.md) for Pi model comparison and carrier board notes for CM5.
 - **ST 2059 TAI path:** Optional `tc_from_tai()` function for SMPTE-epoch-aligned timecode without timezone/leap-second distortion
 
 ### Frame rate support
@@ -136,12 +140,16 @@ PiTCGen reads `CLOCK_REALTIME` for its timecode source — it is **clock-source 
 - Shows: live TC, frame rate, active clock source with icon, GPS sats, PTP offset
 - Source status icons: GPS ● (green), PTP ◇ (yellow), NTP ○ (white), free-run ~ (flashing)
 
+See [HARDWARE.md](HARDWARE.md) for display comparison (SSD1306 vs HD44780 vs ST7789), wiring, and library options.
+
 ### Phase 5 — GPS integration
 
 - u-blox NEO-M8T timing module via UART + PPS GPIO
 - Kernel PPS via `dtoverlay=pps-gpio`
 - `gpsmon` daemon reads `gpsd` socket + `/dev/pps0`, writes status to shared memory
 - chronyd configured with `refclock SHM` + `refclock PPS` as primary source
+
+See [HARDWARE.md](HARDWARE.md) for GPS module comparison (M8T vs M9N vs M6M), antenna selection, wiring diagram, and `/boot/firmware/config.txt` setup.
 
 ### Phase 6 — PTPv2 integration
 
@@ -370,6 +378,8 @@ Pi 5 GPIO ──┬─ 1kΩ ──┬── XLR pin 2 (hot)
 ```
 
 This gives a balanced ~1Vpp signal meeting the SMPTE LTC standard. No DAC, no audio driver, no I2S — the whole generator runs off a single GPIO pin.
+
+See [HARDWARE.md](HARDWARE.md) for complete wiring reference, XLR connector part numbers, and production BOM.
 
 ### Code structure
 

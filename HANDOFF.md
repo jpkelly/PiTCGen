@@ -17,6 +17,7 @@ Architecture, component breakdown, and phases through Phase 7 are fully planned.
 | `pitcgen.env.example` | Environment config template |
 | `PLAN.md` | Full architecture, 9-component breakdown, clock source hierarchy (GPS→PTP→NTP→free-run) |
 | `README.md` | Project overview with feature list |
+| `HARDWARE.md` | Compute modules (Pi 5, CM5), GPS modules, displays, wiring, BOM, enclosures |
 
 ## Reference materials collected
 
@@ -48,6 +49,8 @@ Architecture, component breakdown, and phases through Phase 7 are fully planned.
 | 9 | **buildroot** — appliance image | 7 | all above | Pi hardware |
 
 ## Hardware notes
+
+For full hardware details — GPS modules, displays, Pi model comparison, wiring diagrams, enclosures, and complete BOM — see **[HARDWARE.md](HARDWARE.md)**.
 
 ### Pi model requirements
 | Feature | Pi 1 | Pi 3 | Pi 4 | Pi 5 |

@@ -50,6 +50,7 @@ Broadcast-quality LTC SMPTE timecode generator appliance for Raspberry Pi. Targe
 |---|---|
 | [`PLAN.md`](PLAN.md) | Full architecture, phases, component breakdown, build system, hardware decisions |
 | [`HANDOFF.md`](HANDOFF.md) | Current status, next steps, Pi setup, reference materials |
+| [`HARDWARE.md`](HARDWARE.md) | Compute modules, GPS, displays, audio output, wiring, BOM, enclosures |
 
 ## Quick start (on a Pi)
 
