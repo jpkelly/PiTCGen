@@ -109,6 +109,8 @@ LTC generation only — no PTP, no web UI recommended at 700 MHz. Good for a hea
 
 ### Wiring to Pi 5
 
+GPS uses UART (pins 8/10) for data and GPIO 18 (pin 12) for the PPS signal. See the **Unified wiring** section below for how GPS, display, and LTC output coexist on the same header.
+
 ```
 GPS Module          Pi 5 GPIO (40-pin header)
 ──────────          ─────────────────────────
@@ -235,16 +237,16 @@ Output is consumer line level (~1Vpp) on 3.5mm. Feed into an XLR adapter or dire
 
 ### Production: Direct GPIO (planned)
 
-No DAC, no dongle. The Pi GPIO pin outputs a 0/3.3V biphase-mark waveform directly. A resistive divider + DC-blocking capacitor converts to balanced ~1Vpp for XLR output:
+No DAC, no dongle. GPIO 21 (pin 40) outputs a 0/3.3V biphase-mark waveform directly. A resistive divider + DC-blocking capacitor converts to balanced ~1Vpp for XLR output:
 
 ```
-GPIO pin ──┬─ 1.0kΩ ──┬── XLR pin 2 (hot)
-           │          │
-           ├─ 680Ω  ──┤── XLR pin 3 (cold)
-           │          │
-           └─ 10µF ───┘  (DC block, optional)
+GPIO 21 (pin 40) ──┬─ 1.0kΩ ──┬── XLR pin 2 (hot)
+                   │          │
+                   ├─ 680Ω  ──┤── XLR pin 3 (cold)
+                   │          │
+                   └─ 10µF ───┘  (DC block, optional)
                       
-GND ─────────────────── XLR pin 1 (ground)
+GND (pin 6/14/39) ────────────── XLR pin 1 (ground)
 ```
 
 Meets SMPTE LTC signal level spec. Zero additional active components.
@@ -308,29 +310,62 @@ For production, a custom 3D-printed enclosure with cutouts for OLED window, GPS 
 
 ---
 
-## Wiring reference — Pi 5 40-pin header
+## Unified wiring — all components on one Pi 5 header
+
+All three peripherals connect to different pins — they are **not** wired in parallel. Each uses its own dedicated interface.
 
 ```
-                   3.3V (1)  (2)  5V
-            I2C SDA (3)  (4)  5V
-            I2C SCL (5)  (6)  GND
-                    (7)  (8)  UART TX  ← GPS RX (config)
-                    (9)  (10) UART RX  ← GPS TX (NMEA)
-                   (11)  (12) GPIO 18  ← GPS PPS
-                   (13)  (14) GND
-                   (15)  (16) 
-                   3.3V (17) (18) 
-            SPI MOSI (19) (20) GND
-            SPI MISO (21) (22) 
-            SPI SCLK (23) (24) SPI CE0
-                   (25) (26) SPI CE1
-                           ...          
+                              ┌─ Pi 5 40-pin GPIO header ─┐
+                              │                            │
+        ┌─────────────────────┤ 1  (3.3V)         2 (5V)   │
+        │  ┌──────────────────┤ 3  (SDA)          4 (5V)   │
+        │  │  ┌───────────────┤ 5  (SCL)          6 (GND)  ├──┬──────────────────────┐
+        │  │  │               │ 7  (GPIO 4)       8 (TX)   ├──┼── GPS RX (config)    │
+        │  │  │               │ 9  (GND)          10 (RX)  ├──┼── GPS TX (NMEA)      │
+        │  │  │               │ 11 (GPIO 17)      12 (GPIO 18)├── GPS PPS            │
+        │  │  │               │ 13 (GPIO 27)      14 (GND)  │                    GPS │
+        │  │  │               │ 15 (GPIO 22)      16 (GPIO 23)                      │
+        │  │  │               │ 17 (3.3V)         18 (GPIO 24)                      │
+        │  │  │               │ 19 (GPIO 10)      20 (GND)  │                       │
+        │  │  │               │ 21 (GPIO 9)       22 (GPIO 25)                      │
+        │  │  │               │ 23 (GPIO 11)      24 (GPIO 8)                       │
+        │  │  │               │ 25 (GND)          26 (GPIO 7)                       │
+        │  │  │               │ 27 (ID_SD)        28 (ID_SC) │                       │
+        │  │  │               │ 29 (GPIO 5)       30 (GND)  │                       │
+        │  │  │               │ 31 (GPIO 6)       32 (GPIO 12)                      │
+        │  │  │               │ 33 (GPIO 13)      34 (GND)  │                       │
+        │  │  │               │ 35 (GPIO 19)      36 (GPIO 16)                      │
+        │  │  │               │ 37 (GPIO 26)      38 (GPIO 20)                      │
+        │  │  │  ┌────────────┤ 39 (GND)          40 (GPIO 21)├── LTC biphase-mark   │
+        │  │  │  │            │                            │      (XLR output)       │
+        │  │  │  │            └────────────────────────────┘                        │
+        │  │  │  │                                                                  │
+        │  │  │  └──────────── LTC output                                           │
+        │  │  └─────────────── Display (I2C)                                        │
+        │  └────────────────── Display (I2C)                                        │
+        └───────────────────── GPS power (3.3V) — shared by all components          │
 ```
 
-**Conflicts to avoid:**
-- I2C (pins 3/5) — shared by display and any I2C sensors. I2C is a bus; multiple devices OK if they have different addresses.
-- UART (pins 8/10) — used by GPS. Conflicts with serial console; disable `console=serial0` in `cmdline.txt`.
-- GPIO 18 (pin 12) — used by GPS PPS. Conflicts with PWM audio output; not an issue since we don't use the Pi's PWM audio.
+### Pin assignment summary
+
+| Pin | Function | Peripheral | Notes |
+|-----|----------|------------|-------|
+| 1   | 3.3V     | **All** — GPS, display, LTC divider | Shared power rail; all three draw from the same 3.3V |
+| 3   | SDA (I2C) | **Display** (OLED / LCD) | I2C data — multi-device bus OK if addresses differ |
+| 5   | SCL (I2C) | **Display** (OLED / LCD) | I2C clock |
+| 6   | GND      | **All** — GPS, display, LTC, XLR pin 1 | Shared ground |
+| 8   | TX (UART) | **GPS** RX | Pi → GPS for UBX config commands (optional; GPS works RX-only) |
+| 10  | RX (UART) | **GPS** TX | GPS NMEA sentences → Pi |
+| 12  | GPIO 18  | **GPS** PPS | Hardware pulse-per-second input to kernel (`pps-gpio` overlay) |
+| 14  | GND      | GND return | |
+| 40  | GPIO 21  | **LTC output** | Biphase-mark timecode to XLR via passive divider (see Audio section) |
+
+**Key point:** GPS uses UART (pins 8/10) + one GPIO (pin 12). Display uses I2C (pins 3/5). LTC uses a separate GPIO (pin 40). They are electrically independent — no component shares a data pin with another. Only 3.3V power and GND are common.
+
+### Conflicts to avoid
+- **UART (pins 8/10):** Shared with serial console by default. Disable `console=serial0` in `/boot/firmware/cmdline.txt` when GPS is connected.
+- **GPIO 18 (pin 12):** Conflicts with PWM audio output on older Pi models. Not relevant here — PiTCGen does not use PWM audio.
+- **GPIO 21 (pin 40):** Free on all Pi models. No known conflicts with common HATs or overlays.
 
 ---
 
