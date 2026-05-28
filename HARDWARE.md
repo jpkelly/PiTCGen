@@ -14,7 +14,7 @@ Recommended hardware for building a PiTCGen timecode generator appliance, from d
 | RAM | 4 GB or 8 GB (2 GB works, overkill not needed) |
 | Ethernet | Gigabit with native HW timestamping (BCM54213 PHC) |
 | GPIO | 40-pin header, real-time capable |
-| Audio | 3.5mm jack via PWM — *not* suitable for LTC; use USB dongle or GPIO |
+| Audio | No analog audio jack — HDMI audio, USB dongle, or GPIO only |
 | PTP accuracy | ~100 ns with HW timestamping |
 | Price | ~$60 (4 GB) / ~$80 (8 GB) |
 

@@ -38,7 +38,7 @@ For hardware selection, wiring, and BOM see **[HARDWARE.md](HARDWARE.md)**.
 │  │  │ - libltc  │   (commands)     │  - libmicrohttpd  │   │              │
 │  │  │ - ALSA    │                  │  - serves SPA     │   │              │
 │  │  └─────┬─────┘                  └────────┬──────────┘   │              │
-│  │        │ 3.5mm audio                     │ port 80        │              │
+│  │        │ USB audio / GPIO                  │ port 80        │              │
 │  │        ▼                                  ▼                │              │
 │  │  ┌─────────┐                    ┌──────────────────┐      │              │
 │  │  │LTC out  │                    │ Web browser (LAN)│      │              │
